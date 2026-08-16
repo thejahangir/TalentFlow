@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #2563EB;
+  --color-brand-green: #16A34A;
+  --color-brand-dark: #172033;
+  --font-sans: "Inter", sans-serif;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  background-color: #f9fafb;
+  color: #172033;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+@utility glass {
+  background-color: rgb(255 255 255 / 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+@utility glass-dark {
+  background-color: rgb(23 32 51 / 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+}
+.logo-talentflow{
+  width:170px
+} 
+.logo-talentflow-footer{
+  width:140px
+}
