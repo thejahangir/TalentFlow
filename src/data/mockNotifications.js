@@ -2,7 +2,7 @@ export const mockNotifications = [
   {
     id: 1,
     title: 'New Candidate Applied',
-    message: 'John Doe has applied for the Senior React Developer position.',
+    message: 'Rahul Verma has applied for the Senior React Developer position.',
     time: '2 mins ago',
     isRead: false,
     type: 'candidate'
@@ -10,7 +10,7 @@ export const mockNotifications = [
   {
     id: 2,
     title: 'Interview Scheduled',
-    message: 'Interview with Sarah Smith is scheduled for tomorrow at 10:00 AM.',
+    message: 'Interview with Ananya Sharma is scheduled for tomorrow at 10:00 AM.',
     time: '1 hour ago',
     isRead: false,
     type: 'interview'
@@ -26,7 +26,7 @@ export const mockNotifications = [
   {
     id: 4,
     title: 'New Message from Hiring Team',
-    message: 'Alice left a comment on Michael\'s scorecard.',
+    message: 'Priya left a comment on Rahul\'s scorecard.',
     time: 'Yesterday',
     isRead: true,
     type: 'message'

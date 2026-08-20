@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Search } from 'lucide-react';
 
 export default function SearchableSelect({ 
   options = [], 
   value, 
   onChange, 
-  placeholder = "Select an option..." 
+  placeholder = "Select an option...",
+  hasError = false
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef(null);
 
   // Handle click outside to close
@@ -20,8 +23,14 @@ export default function SearchableSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // No search filter applied as per request
-  const filteredOptions = options || [];
+  // Reset search when opened
+  useEffect(() => {
+    if (isOpen) setSearchTerm('');
+  }, [isOpen]);
+
+  const filteredOptions = options.filter(opt => 
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const selectedOption = (options || []).find(opt => opt?.value === value);
 
@@ -30,25 +39,38 @@ export default function SearchableSelect({
       {/* Select Trigger */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border rounded-lg flex items-center justify-between cursor-pointer transition-all ${
-          isOpen ? 'border-[#1890FF] ring-2 ring-[#1890FF]/20 bg-white dark:bg-[#161c24]' : 'border-gray-200 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 dark:bg-gray-800/50'
+        className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+          isOpen ? 'border-[#1890FF] ring-2 ring-[#1890FF]/20 bg-white dark:bg-[#161c24]' : (hasError ? 'border-[#FF5630] bg-red-50 dark:bg-[#FF5630]/10' : 'border-gray-200 dark:border-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700/50')
         }`}
       >
-        <span className={`text-sm ${selectedOption ? 'text-[#212b36] dark:text-white font-medium' : 'text-gray-400 dark:text-white '}`}>
+        <span className={`text-sm ${selectedOption ? 'text-[#212b36] dark:text-white font-medium' : 'text-gray-400 dark:text-gray-400'}`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <span className="text-gray-400 dark:text-white font-bold px-2">{isOpen ? '▲' : '▼'}</span>
+        <span className="text-gray-400 font-bold px-2 text-xs">{isOpen ? '▲' : '▼'}</span>
       </div>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#161c24] border border-gray-100 dark:border-gray-800/50 rounded-xl shadow-[0_8px_24px_rgba(149,157,165,0.2)] overflow-hidden animate-fade-in origin-top">
+        <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-[#161c24] border border-gray-100 dark:border-gray-800/50 rounded-xl shadow-2xl overflow-hidden animate-fade-in origin-top">
           
+          <div className="p-2 border-b border-gray-100 dark:border-gray-800/50">
+             <div className="relative">
+               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+               <input 
+                 autoFocus
+                 type="text" 
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 placeholder="Search candidates..."
+                 className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#1890FF]/20 outline-none text-[#212b36] dark:text-white"
+               />
+             </div>
+          </div>
 
           {/* Options List */}
-          <div className="max-h-36 overflow-y-auto custom-scrollbar p-1">
+          <div className="max-h-48 overflow-y-auto custom-scrollbar p-1">
             {filteredOptions.length === 0 ? (
-              <div className="px-3 py-4 text-center text-sm text-gray-500 dark:text-white ">
+              <div className="px-3 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 No results found
               </div>
             ) : (
@@ -59,8 +81,8 @@ export default function SearchableSelect({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`px-3 py-1.5 rounded-lg cursor-pointer flex items-center justify-between group transition-colors ${
-                    value === option.value ? 'bg-[#1890FF]/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-800/50'
+                  className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between group transition-colors ${
+                    value === option.value ? 'bg-[#1890FF]/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
                 >
                   <div>
@@ -68,7 +90,7 @@ export default function SearchableSelect({
                       {option.label}
                     </div>
                     {option.description && (
-                      <div className={`text-xs mt-0.5 ${value === option.value ? 'text-[#1890FF]/70' : 'text-[#637381] dark:text-white '}`}>
+                      <div className={`text-xs mt-0.5 ${value === option.value ? 'text-[#1890FF]/70' : 'text-[#637381] dark:text-gray-400'}`}>
                         {option.description}
                       </div>
                     )}
@@ -80,7 +102,6 @@ export default function SearchableSelect({
               ))
             )}
           </div>
-
         </div>
       )}
     </div>
