@@ -26,7 +26,7 @@ export default function UserMenu({ isSidebarCollapsed }) {
   };
 
   const confirmLogout = () => {
-    navigate('/');
+    navigate('/auth');
   };
 
   return (
@@ -56,16 +56,18 @@ export default function UserMenu({ isSidebarCollapsed }) {
       
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        title={isSidebarCollapsed ? "Agency Admin" : undefined}
-        className={`flex items-center gap-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group cursor-pointer ${isSidebarCollapsed ? 'justify-center p-1' : 'p-2'}`}
+        className={`w-full flex items-center p-2 rounded-xl transition-colors cursor-pointer ${isOpen ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'} ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}
+        title={isSidebarCollapsed ? "Corporate HR" : undefined}
       >
-        <img src={userAvatar} alt="Agency Admin" className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-200 dark:border-gray-700" />
-        {!isSidebarCollapsed && (
-          <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-semibold text-[#212b36] dark:text-white truncate">Agency Admin</p>
-            <p className="text-xs text-[#637381] dark:text-white truncate">admin@talentflow.com</p>
-          </div>
-        )}
+        <div className="flex items-center gap-3 overflow-hidden">
+          <img src={userAvatar} alt="Corporate HR" className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-200 dark:border-gray-700" />
+          {!isSidebarCollapsed && (
+            <div className="text-left truncate">
+              <p className="text-sm font-semibold text-[#212b36] dark:text-white truncate">Corporate HR</p>
+              <p className="text-xs text-[#637381] dark:text-white truncate">admin@talentflow.com</p>
+            </div>
+          )}
+        </div>
       </button>
 
       {/* Logout Confirmation Modal */}

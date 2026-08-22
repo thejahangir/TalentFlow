@@ -1,9 +1,11 @@
 import React from 'react';
-import { useLocation, Navigate, Routes, Route } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate, Routes, Route } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import AgencyLayout from '../components/dashboard/AgencyLayout';
 import NotificationsPage from './NotificationsPage';
 import JobDashboardPage from './JobDashboardPage';
+import JobsPage from './JobsPage';
 
 const PlaceholderPage = ({ title }) => (
   <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col items-center justify-center min-h-[400px]">
@@ -19,26 +21,28 @@ const PlaceholderPage = ({ title }) => (
 
 export default function DashboardPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   
-  // Simple mock persistence for demo: if no state, try to fall back to Agencies if URL is /dashboard/*
-  const userType = location.state?.userType || 'Agencies';
+  // Simple mock persistence for demo: if no state, try to fall back to Corporate if URL is /dashboard/*
+  const userType = location.state?.userType || 'Corporate';
 
-  if (userType === 'Agencies') {
+  if (userType === 'Corporate') {
     return (
       <AgencyLayout>
         <Routes>
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="agencies" element={<JobDashboardPage />} />
+          <Route path="jobs" element={<JobsPage />} />
           <Route path="job" element={<PlaceholderPage title="Job Page" />} />
           <Route path="candidate-reports" element={<PlaceholderPage title="Candidate Reports" />} />
           <Route path="integrations" element={<PlaceholderPage title="Integrations" />} />
-          <Route path="*" element={<Navigate to="agencies" replace />} />
+          <Route path="*" element={<Navigate to="jobs" replace />} />
         </Routes>
       </AgencyLayout>
     );
   }
 
-  // Fallback for other roles (Corporate, Super Admin) until built
+  // Fallback for other roles (Agencies, Super Admin) until built
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
@@ -46,9 +50,16 @@ export default function DashboardPage() {
       <main className="flex-1 flex items-center justify-center p-8 mt-20">
         <div className="w-full max-w-2xl bg-white p-12 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 text-center">
           <h1 className="text-4xl font-bold text-[#212b36] mb-4">{userType} Dashboard</h1>
-          <p className="text-[#637381] text-lg">
+          <p className="text-[#637381] text-lg mb-8">
             This dashboard layout is currently under construction.
           </p>
+          <button 
+            onClick={() => navigate('/auth')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#212b36] text-white rounded-xl font-bold hover:bg-[#161c24] transition-colors shadow-sm cursor-pointer"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
         </div>
       </main>
     </div>

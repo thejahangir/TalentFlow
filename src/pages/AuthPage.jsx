@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Bot, Sparkles, BrainCircuit } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bot, Sparkles, BrainCircuit, ArrowLeft } from 'lucide-react';
 import LoginForm from '../components/auth/LoginForm';
 import SignUpForm from '../components/auth/SignUpForm';
 import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
@@ -63,6 +64,16 @@ export default function AuthPage() {
 
       {/* Right Panel - Auth Forms */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative bg-white">
+        
+        {/* Back to Home Link */}
+        <Link 
+          to="/" 
+          className="absolute top-6 right-8 flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#212b36] transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Home
+        </Link>
+
         <div className="w-full max-w-md relative z-10 p-8 sm:p-10 animate-fade-in">
           
           {/* Mobile Header (Only visible on small screens) */}

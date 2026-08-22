@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserX, UserCheck, ChevronRight, Search, Star, FileText, CheckSquare, Clock, MapPin, Plus, ClipboardEdit, FileCheck, AlertCircle, UserPlus, Activity, X, Video, Filter, MoreHorizontal, Settings, Users as UsersIcon, CheckCircle, Calendar, Briefcase, CalendarDays } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, UserX, UserCheck, ChevronRight, Search, Star, FileText, CheckSquare, Clock, MapPin, Plus, ClipboardEdit, FileCheck, AlertCircle, UserPlus, Activity, X, Video, Filter, MoreHorizontal, Settings, Users as UsersIcon, CheckCircle, Calendar, Briefcase, CalendarDays, ArrowLeft } from 'lucide-react';
 import SearchableSelect from '../components/ui/SearchableSelect';
 
 // --- MOCK DATA ---
@@ -115,6 +116,7 @@ const recentActivity = [
 ];
 
 export default function JobDashboardPage() {
+  const navigate = useNavigate();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteRole, setInviteRole] = useState('');
   const [showInviteSuccess, setShowInviteSuccess] = useState(false);
@@ -146,7 +148,7 @@ export default function JobDashboardPage() {
   const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
   const currentCandidates = filteredCandidates.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const tabs = ['Overview', 'Pipeline', 'Candidates', 'Interviews', 'Team & Scorecards', 'Settings'];
+  const tabs = ['Overview', 'Job Description', 'Pipeline', 'Candidates', 'Interviews', 'Team & Scorecards', 'Settings'];
 
   const handleMoveCandidate = (candidate, fromStage, toStage) => {
     setPipelineBoard(prev => {
@@ -221,8 +223,12 @@ export default function JobDashboardPage() {
     <div className="p-6 space-y-6 relative">
       
       {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="mb-2">
+        <button onClick={() => navigate('/dashboard/jobs')} className="text-sm font-bold text-[#637381] dark:text-gray-400 hover:text-[#1890FF] flex items-center gap-1.5 transition-colors w-fit mb-4 cursor-pointer">
+          <ArrowLeft size={16} /> Back to Job List
+        </button>
+        <div className="flex items-center justify-between">
+          <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-[#212b36] dark:text-white ">Senior AI Research Scientist</h1>
             <span className="bg-[#00A76F]/10 text-[#00A76F] text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">
@@ -251,6 +257,7 @@ export default function JobDashboardPage() {
              <Plus size={14} />
            </button>
         </div>
+      </div>
       </div>
 
       {/* JOB NAVIGATION TABS */}
@@ -506,6 +513,45 @@ export default function JobDashboardPage() {
               </div>
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* JOB DESCRIPTION TAB */}
+      {activeTab === 'Job Description' && (
+        <div className="bg-white dark:bg-[#161c24] p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 dark:border-gray-800/50 animate-fade-in text-[#454f5b] dark:text-gray-300">
+          <h2 className="text-xl font-bold text-[#212b36] dark:text-white mb-6">Job Description: Senior AI Research Scientist</h2>
+          
+          <div className="space-y-6 text-sm">
+            <section>
+              <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-3">About the Role</h3>
+              <p className="leading-relaxed">
+                We are looking for a Senior AI Research Scientist to join our cutting-edge AI labs team. In this role, you will be responsible for leading research and development of novel deep learning architectures, particularly focusing on large language models and multimodal AI systems. You will work closely with a cross-functional team of researchers, engineers, and product managers to push the boundaries of what's possible with artificial intelligence.
+              </p>
+            </section>
+            
+            <section>
+              <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-3">Key Responsibilities</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Design, develop, and train state-of-the-art machine learning models for natural language processing and computer vision tasks.</li>
+                <li>Conduct independent research leading to publications in top-tier AI conferences (e.g., NeurIPS, ICML, ICLR).</li>
+                <li>Collaborate with the engineering team to optimize models for efficient deployment in production environments.</li>
+                <li>Provide technical leadership and mentor junior researchers on the team.</li>
+                <li>Stay up-to-date with the latest advancements in AI research and identify new opportunities for innovation.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-3">Requirements</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Ph.D. or Master's degree in Computer Science, Artificial Intelligence, Machine Learning, or a related field.</li>
+                <li>5+ years of industry or academic experience in developing and training deep learning models.</li>
+                <li>Strong programming skills in Python and proficiency with frameworks like PyTorch or TensorFlow.</li>
+                <li>A solid track record of publications in top-tier AI conferences or journals.</li>
+                <li>Excellent problem-solving skills and the ability to work collaboratively in a fast-paced environment.</li>
+                <li>Experience with distributed training and model optimization techniques is a strong plus.</li>
+              </ul>
+            </section>
           </div>
         </div>
       )}

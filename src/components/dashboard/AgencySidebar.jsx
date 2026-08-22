@@ -30,6 +30,7 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
   const [expandedMenu, setExpandedMenu] = useState(null);
 
   const sidebarLinks = [
+    { name: 'Jobs', path: '/dashboard/jobs', icon: Briefcase },
     { name: 'Job Dashboard', path: '/dashboard/agencies', icon: LayoutDashboard },
     { name: 'Sourcing', path: '/dashboard/sourcing', icon: Search },
     { name: 'Candidates', path: '/dashboard/candidates', icon: Users },
