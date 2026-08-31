@@ -25,7 +25,7 @@ export default function NotificationsPage() {
       case 'job': return <Briefcase size={20} className="text-[#00A76F]" />;
       case 'message': return <MessageSquare size={20} className="text-[#8E33FF]" />;
       case 'report': return <FileText size={20} className="text-[#FF5630]" />;
-      default: return <Bell size={20} className="text-[#637381]" />;
+      default: return <Bell size={20} className="text-black" />;
     }
   };
 
@@ -47,7 +47,7 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#212b36] mb-1">Notifications</h1>
-          <p className="text-[#637381] text-sm">
+          <p className="text-black text-sm">
             You have {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
           </p>
         </div>
@@ -86,7 +86,7 @@ export default function NotificationsPage() {
                       {notification.time}
                     </span>
                   </div>
-                  <p className={`text-sm ${notification.isRead ? 'text-[#637381]' : 'text-[#454f5b]'} pr-8`}>
+                  <p className={`text-sm ${notification.isRead ? 'text-black' : 'text-[#454f5b]'} pr-8`}>
                     {notification.message}
                   </p>
                 </div>
@@ -112,7 +112,7 @@ export default function NotificationsPage() {
               <Bell size={40} className="text-gray-300" />
             </div>
             <h3 className="text-xl font-bold text-[#212b36] mb-2">All caught up!</h3>
-            <p className="text-[#637381] max-w-sm">
+            <p className="text-black max-w-sm">
               You don't have any notifications right now. When you do, they'll show up here.
             </p>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -19,7 +19,11 @@ import {
   Workflow,
   Bell,
   CheckCircle,
-  Activity
+  Activity,
+  Book,
+  Star,
+  FileSignature,
+  Mail
 } from 'lucide-react';
 import UserMenu from './UserMenu';
 
@@ -27,7 +31,16 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  const [expandedMenu, setExpandedMenu] = useState(null);
+  const [expandedMenu, setExpandedMenu] = useState(() => {
+    if (currentPath.includes('/dashboard/reports')) return 'Reports';
+    return null;
+  });
+
+  useEffect(() => {
+    if (currentPath.includes('/dashboard/reports')) {
+      setExpandedMenu('Reports');
+    }
+  }, [currentPath]);
 
   const sidebarLinks = [
     { name: 'Jobs', path: '/dashboard/jobs', icon: Briefcase },
@@ -36,22 +49,7 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
     { name: 'Candidates', path: '/dashboard/candidates', icon: Users },
     { name: 'Pipeline', path: '/dashboard/pipeline', icon: Columns },
     { name: 'Approvals', path: '/dashboard/approvals', icon: CheckSquare },
-    { name: 'Reports', path: '/dashboard/reports', icon: BarChart2 },
-    { name: 'Job Setup', path: '/dashboard/job-setup', icon: Settings }
-  ];
-
-  const jobSetupSubItems = [
-    { name: 'Overview', path: '/dashboard/job-setup/overview', icon: FileText },
-    { name: 'Job Info', path: '/dashboard/job-setup/info', icon: Info },
-    { name: 'Job Kickoff', path: '/dashboard/job-setup/kickoff', icon: Rocket },
-    { name: 'Job Posts', path: '/dashboard/job-setup/posts', icon: Briefcase },
-    { name: 'Scorecard', path: '/dashboard/job-setup/scorecard', icon: ClipboardList },
-    { name: 'Interview Plan', path: '/dashboard/job-setup/interview-plan', icon: Calendar },
-    { name: 'Stage Transitions', path: '/dashboard/job-setup/stage-transitions', icon: Workflow },
-    { name: 'Hiring Team', path: '/dashboard/job-setup/hiring-team', icon: Users },
-    { name: 'Notifications', path: '/dashboard/job-setup/notifications', icon: Bell },
-    { name: 'Approvals', path: '/dashboard/job-setup/approvals', icon: CheckCircle },
-    { name: 'Activity Feed', path: '/dashboard/job-setup/activity-feed', icon: Activity }
+    { name: 'Reports', path: '/dashboard/reports', icon: BarChart2 }
   ];
 
   const reportsSubItems = [
@@ -61,7 +59,6 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
   ];
 
   const getSubItems = (linkName) => {
-    if (linkName === 'Job Setup') return jobSetupSubItems;
     if (linkName === 'Reports') return reportsSubItems;
     return null;
   };
@@ -103,7 +100,7 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                       isActive || isExpanded
                         ? 'text-[#212b36] dark:text-white font-bold' 
-                        : 'text-[#637381] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#212b36] dark:hover:text-white'
+                        : 'text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#212b36] dark:hover:text-white'
                     } ${isSidebarCollapsed ? 'justify-center' : ''}`}
                   >
                     {renderLinkContent()}
@@ -115,7 +112,7 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                       isActive 
                         ? 'bg-[#00A76F]/10 text-[#00A76F]' 
-                        : 'text-[#637381] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#212b36] dark:hover:text-white'
+                        : 'text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#212b36] dark:hover:text-white'
                     } ${isSidebarCollapsed ? 'justify-center' : ''}`}
                   >
                     {renderLinkContent()}
@@ -142,11 +139,18 @@ export default function AgencySidebar({ isSidebarCollapsed }) {
                               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[0.875rem] transition-colors cursor-pointer ${
                                 isSubActive
                                   ? 'bg-[#00A76F]/10 text-[#00A76F] font-bold'
-                                  : 'text-[#637381] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#212b36] dark:hover:text-white'
+                                  : 'text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-[#212b36] dark:hover:text-white'
                               } ${isSidebarCollapsed ? 'justify-center' : ''}`}
                             >
-                              <SubIcon size={16} className="shrink-0 text-[#00A76F]" />
-                              {!isSidebarCollapsed && <span>{subItem.name}</span>}
+                              <SubIcon size={16} className={`shrink-0 ${subItem.completed ? 'text-gray-400' : 'text-[#00A76F]'}`} />
+                              {!isSidebarCollapsed && (
+                                <div className="flex-1 flex items-center justify-between">
+                                  <span className={subItem.completed && !isSubActive ? 'text-gray-500 line-through decoration-gray-300 dark:decoration-gray-600' : ''}>{subItem.name}</span>
+                                  {subItem.completed && (
+                                    <CheckCircle size={14} className="text-[#00A76F] shrink-0" />
+                                  )}
+                                </div>
+                              )}
                             </Link>
                           );
                         })}

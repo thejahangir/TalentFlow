@@ -29,7 +29,7 @@ export default function NotificationPanel({ isOpen, onClose, notifications }) {
       case 'job': return <Briefcase size={18} className="text-[#00A76F]" />;
       case 'message': return <MessageSquare size={18} className="text-[#8E33FF]" />;
       case 'report': return <FileText size={18} className="text-[#FF5630]" />;
-      default: return <Bell size={18} className="text-[#637381]" />;
+      default: return <Bell size={18} className="text-black" />;
     }
   };
 
@@ -84,7 +84,7 @@ export default function NotificationPanel({ isOpen, onClose, notifications }) {
                     <p className={`text-sm truncate ${notification.isRead ? 'text-[#212b36] dark:text-white ' : 'text-[#212b36] dark:text-white font-bold'}`}>
                       {notification.title}
                     </p>
-                    <p className="text-xs text-[#637381] dark:text-white line-clamp-2 mt-0.5">
+                    <p className="text-xs text-black dark:text-white line-clamp-2 mt-0.5">
                       {notification.message}
                     </p>
                     <p className="text-[11px] text-[#919eab] dark:text-white mt-1.5 font-medium">
@@ -98,7 +98,7 @@ export default function NotificationPanel({ isOpen, onClose, notifications }) {
               ))}
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center text-[#637381] dark:text-white ">
+            <div className="h-full flex flex-col items-center justify-center text-center text-black dark:text-white ">
               <Bell size={48} className="text-gray-200 dark:text-gray-800 mb-4" />
               <p>You have no notifications.</p>
             </div>

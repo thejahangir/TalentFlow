@@ -35,11 +35,11 @@ export default function UserMenu({ isSidebarCollapsed }) {
         <div className={`absolute bottom-full mb-2 bg-white dark:bg-[#212b36] rounded-xl shadow-[0_8px_24px_rgba(149,157,165,0.2)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-800/50 overflow-hidden z-50 animate-fade-in origin-bottom ${isSidebarCollapsed ? 'left-4 w-48' : 'left-4 right-4'}`}>
           <div className="p-2">
             <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[#212b36] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-md transition-colors text-left font-medium cursor-pointer">
-              <User size={16} className="text-[#637381] dark:text-white shrink-0" />
+              <User size={16} className="text-black dark:text-white shrink-0" />
               <span className={isSidebarCollapsed ? 'md:hidden lg:inline' : ''}>My Profile</span>
             </button>
             <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[#212b36] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-md transition-colors text-left font-medium cursor-pointer">
-              <Settings size={16} className="text-[#637381] dark:text-white shrink-0" />
+              <Settings size={16} className="text-black dark:text-white shrink-0" />
               <span className={isSidebarCollapsed ? 'md:hidden lg:inline' : ''}>Settings</span>
             </button>
             <div className="h-px bg-gray-100 dark:bg-gray-800/50 my-1"></div>
@@ -64,7 +64,7 @@ export default function UserMenu({ isSidebarCollapsed }) {
           {!isSidebarCollapsed && (
             <div className="text-left truncate">
               <p className="text-sm font-semibold text-[#212b36] dark:text-white truncate">Corporate HR</p>
-              <p className="text-xs text-[#637381] dark:text-white truncate">admin@talentflow.com</p>
+              <p className="text-xs text-black dark:text-white truncate">admin@talentflow.com</p>
             </div>
           )}
         </div>
@@ -78,11 +78,11 @@ export default function UserMenu({ isSidebarCollapsed }) {
               <LogOut size={28} className="text-[#FF5630]" />
             </div>
             <h2 className="text-xl font-bold text-[#212b36] dark:text-white mb-2">Ready to Leave?</h2>
-            <p className="text-sm text-[#637381] dark:text-white mb-8 px-2">You are about to log out of your TalentFlow account. You will need to log back in to access your dashboard.</p>
+            <p className="text-sm text-black dark:text-white mb-8 px-2">You are about to log out of your TalentFlow account. You will need to log back in to access your dashboard.</p>
             <div className="flex items-center gap-3 w-full">
               <button 
                 onClick={() => setShowLogoutConfirm(false)} 
-                className="flex-1 px-4 py-2.5 text-sm font-bold text-[#637381] dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer"
+                className="flex-1 px-4 py-2.5 text-sm font-bold text-black dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>

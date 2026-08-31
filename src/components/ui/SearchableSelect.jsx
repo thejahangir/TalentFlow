@@ -6,7 +6,10 @@ export default function SearchableSelect({
   value, 
   onChange, 
   placeholder = "Select an option...",
-  hasError = false
+  searchPlaceholder = "Search...",
+  hasError = false,
+  showSearch = true,
+  size = 'default'
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +32,7 @@ export default function SearchableSelect({
   }, [isOpen]);
 
   const filteredOptions = options.filter(opt => 
-    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+    !showSearch || opt.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const selectedOption = (options || []).find(opt => opt?.value === value);
@@ -39,7 +42,7 @@ export default function SearchableSelect({
       {/* Select Trigger */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+        className={`w-full ${size === 'sm' ? 'px-3 py-1.5' : 'px-4 py-2.5'} bg-gray-50 dark:bg-gray-800/50 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${
           isOpen ? 'border-[#1890FF] ring-2 ring-[#1890FF]/20 bg-white dark:bg-[#161c24]' : (hasError ? 'border-[#FF5630] bg-red-50 dark:bg-[#FF5630]/10' : 'border-gray-200 dark:border-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700/50')
         }`}
       >
@@ -53,19 +56,21 @@ export default function SearchableSelect({
       {isOpen && (
         <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-[#161c24] border border-gray-100 dark:border-gray-800/50 rounded-xl shadow-2xl overflow-hidden animate-fade-in origin-top">
           
-          <div className="p-2 border-b border-gray-100 dark:border-gray-800/50">
-             <div className="relative">
-               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-               <input 
-                 autoFocus
-                 type="text" 
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 placeholder="Search candidates..."
-                 className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#1890FF]/20 outline-none text-[#212b36] dark:text-white"
-               />
-             </div>
-          </div>
+          {showSearch && (
+            <div className="p-2 border-b border-gray-100 dark:border-gray-800/50">
+               <div className="relative">
+                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                 <input 
+                   autoFocus
+                   type="text" 
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   placeholder={searchPlaceholder}
+                   className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#1890FF]/20 outline-none text-[#212b36] dark:text-white"
+                 />
+               </div>
+            </div>
+          )}
 
           {/* Options List */}
           <div className="max-h-48 overflow-y-auto custom-scrollbar p-1">
@@ -81,7 +86,7 @@ export default function SearchableSelect({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between group transition-colors ${
+                  className={`${size === 'sm' ? 'px-2 py-1.5' : 'px-3 py-2'} rounded-lg cursor-pointer flex items-center justify-between group transition-colors ${
                     value === option.value ? 'bg-[#1890FF]/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
                 >
@@ -90,7 +95,7 @@ export default function SearchableSelect({
                       {option.label}
                     </div>
                     {option.description && (
-                      <div className={`text-xs mt-0.5 ${value === option.value ? 'text-[#1890FF]/70' : 'text-[#637381] dark:text-gray-400'}`}>
+                      <div className={`text-xs mt-0.5 ${value === option.value ? 'text-[#1890FF]/70' : 'text-black dark:text-gray-400'}`}>
                         {option.description}
                       </div>
                     )}

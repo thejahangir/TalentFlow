@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, Plus, Filter, MoreVertical, Briefcase, MapPin, 
+import { Search, Plus, Filter, MoreVertical, Briefcase, MapPin, 
   Users, Clock, CheckCircle, AlertCircle, Calendar, 
-  ChevronDown, ArrowUpRight, Copy, Edit, Trash2, X, UploadCloud, Send
-} from 'lucide-react';
+  ChevronDown, ArrowUpRight, Copy, Edit, Trash2, X, UploadCloud, Send, BrainCircuit, FileText, Upload, Type, ArrowRight, Loader2 } from 'lucide-react';
 import SearchableSelect from '../components/ui/SearchableSelect';
 
 const MOCK_JOBS = [
@@ -51,11 +49,17 @@ export default function JobsPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
   
+  const [modalStep, setModalStep] = useState(1);
+  const [skippedJdUpload, setSkippedJdUpload] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   const [newJobData, setNewJobData] = useState({
     title: '',
     department: '',
     location: '',
     type: 'Full-time',
+    workMode: 'On-site',
     hiringManager: '',
     jdText: '',
     jdFile: null
@@ -66,8 +70,6 @@ export default function JobsPage() {
     if (!newJobData.title.trim()) newErrors.title = 'Job Title is required';
     if (!newJobData.department.trim()) newErrors.department = 'Department is required';
     if (!newJobData.location.trim()) newErrors.location = 'Location is required';
-    if (!newJobData.hiringManager.trim()) newErrors.hiringManager = 'Hiring Manager is required';
-    if (!newJobData.jdText.trim() && !newJobData.jdFile) newErrors.jd = 'Job Description or Document is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -78,7 +80,52 @@ export default function JobsPage() {
     setEditingJobId(null);
     setNewJobData({title: '', department: '', location: '', type: 'Full-time', hiringManager: '', jdText: '', jdFile: null});
     setErrors({});
+    setModalStep(1);
+    setSkippedJdUpload(false);
+    setIsExtracting(false);
   };
+
+  const simulateExtraction = () => {
+    setIsExtracting(true);
+    setTimeout(() => {
+      setIsExtracting(false);
+      setNewJobData(prev => ({
+        ...prev,
+        title: 'Senior Frontend Engineer',
+        department: 'Engineering',
+        location: 'Remote',
+        hiringManager: 'Amit Sharma'
+      }));
+      setModalStep(2);
+    }, 1500);
+  };
+  
+  const handleFileUpload = (file) => {
+    if (file) {
+      setNewJobData(prev => ({...prev, jdFile: file}));
+      if (modalStep === 1) {
+        simulateExtraction();
+      }
+    }
+  };
+  
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+  
   
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -112,7 +159,7 @@ export default function JobsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#212b36] dark:text-white">List of Jobs</h1>
-          <p className="text-sm text-[#637381] dark:text-gray-400 mt-1">Manage and track all open requisitions.</p>
+          <p className="text-sm text-black dark:text-gray-400 mt-1">Manage and track all open requisitions.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="px-4 py-2 bg-white dark:bg-[#161c24] border border-gray-200 dark:border-gray-800/50 text-[#212b36] dark:text-white rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
@@ -141,7 +188,7 @@ export default function JobsPage() {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-[#212b36] dark:text-white">{stat.value}</h3>
-              <p className="text-sm font-medium text-[#637381] dark:text-gray-400">{stat.label}</p>
+              <p className="text-sm font-medium text-black dark:text-gray-400">{stat.label}</p>
             </div>
           </div>
         ))}
@@ -157,7 +204,7 @@ export default function JobsPage() {
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${
                 statusFilter === status 
                   ? 'bg-[#212b36] dark:bg-white text-white dark:text-[#212b36]' 
-                  : 'bg-gray-50 dark:bg-gray-800/50 text-[#637381] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  : 'bg-gray-50 dark:bg-gray-800/50 text-black dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
               }`}
             >
               {status}
@@ -176,7 +223,7 @@ export default function JobsPage() {
               className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-lg text-sm focus:ring-2 focus:ring-[#1890FF]/20 focus:border-[#1890FF] outline-none text-[#212b36] dark:text-white transition-all"
             />
           </div>
-          <button className="px-3 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-lg text-[#637381] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+          <button className="px-3 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-lg text-black dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
             <Search size={18} />
           </button>
         </div>
@@ -188,11 +235,11 @@ export default function JobsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 dark:bg-gray-800/20 border-b border-gray-100 dark:border-gray-800/50">
-                <th className="px-6 py-4 text-xs font-bold text-[#637381] dark:text-gray-400 uppercase tracking-wider">Job Details</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#637381] dark:text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#637381] dark:text-gray-400 uppercase tracking-wider">Active Candidates</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#637381] dark:text-gray-400 uppercase tracking-wider">Hiring Manager</th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-[#637381] dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-xs font-bold text-black dark:text-gray-400 tracking-wider">Job Details</th>
+                <th className="px-6 py-4 text-xs font-bold text-black dark:text-gray-400 tracking-wider">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-black dark:text-gray-400 tracking-wider">Active Candidates</th>
+                <th className="px-6 py-4 text-xs font-bold text-black dark:text-gray-400 tracking-wider">Hiring Manager</th>
+                <th className="px-6 py-4 text-center text-xs font-bold text-black dark:text-gray-400 tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
@@ -209,7 +256,7 @@ export default function JobsPage() {
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-[#212b36] dark:text-white group-hover:text-[#1890FF] transition-colors cursor-pointer">{job.title}</h4>
-                        <div className="flex items-center gap-2 mt-1 text-xs font-medium text-[#637381] dark:text-gray-400">
+                        <div className="flex items-center gap-2 mt-1 text-xs font-medium text-black dark:text-gray-400">
                           <span className="flex items-center gap-1"><MapPin size={12} /> {job.location}</span>
                           <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
                           <span>{job.department}</span>
@@ -224,7 +271,7 @@ export default function JobsPage() {
                       <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                       {job.status}
                     </span>
-                    <p className="text-[11px] text-[#637381] dark:text-gray-500 mt-1.5 font-medium">Posted: {job.postedDate}</p>
+                    <p className="text-[11px] text-black dark:text-gray-500 mt-1.5 font-medium">Posted: {job.postedDate}</p>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -234,14 +281,14 @@ export default function JobsPage() {
                         </div>
                       ) : (
                         <div className="flex -space-x-2">
+                           <img src={`https://i.pravatar.cc/150?u=${job.id + 1}`} alt="Candidate" className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#161c24] z-30 relative object-cover" />
+                           {job.applicants > 1 && (
+                             <img src={`https://i.pravatar.cc/150?u=${job.id + 2}`} alt="Candidate" className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#161c24] z-20 relative object-cover" />
+                           )}
                            {job.applicants > 2 && (
-                             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 ring-2 ring-white dark:ring-[#161c24] flex items-center justify-center text-[10px] font-bold text-gray-600 dark:text-gray-300 z-30">
+                             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 ring-2 ring-white dark:ring-[#161c24] flex items-center justify-center text-[10px] font-bold text-gray-600 dark:text-gray-300 z-10 relative">
                                +{job.applicants - 2 > 99 ? '99' : job.applicants - 2}
                              </div>
-                           )}
-                           <img src={`https://i.pravatar.cc/150?u=${job.id + 1}`} alt="Candidate" className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#161c24] z-20 object-cover" />
-                           {job.applicants > 1 && (
-                             <img src={`https://i.pravatar.cc/150?u=${job.id + 2}`} alt="Candidate" className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#161c24] z-10 object-cover" />
                            )}
                         </div>
                       )}
@@ -268,7 +315,7 @@ export default function JobsPage() {
                           e.stopPropagation();
                           setOpenActionMenuId(openActionMenuId === job.id ? null : job.id);
                         }}
-                        className="p-2 text-[#637381] hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 text-black hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
                         title="Actions"
                       >
                         <MoreVertical size={16} />
@@ -299,17 +346,7 @@ export default function JobsPage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenActionMenuId(null);
-                              setEditingJobId(job.id);
-                              setNewJobData({
-                                title: job.title,
-                                department: job.department,
-                                location: job.location,
-                                type: job.type,
-                                hiringManager: job.hiringManager,
-                                jdText: job.jdText || '',
-                                jdFile: null
-                              });
-                              setIsCreateModalOpen(true);
+                              navigate('/dashboard/job-setup/overview', { state: { jobData: job, from: { name: 'Job List', path: '/dashboard/jobs' } } });
                             }}
                             className="w-full px-4 py-2 text-left text-sm font-medium text-[#212b36] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors cursor-pointer"
                           >
@@ -337,7 +374,7 @@ export default function JobsPage() {
                         <Briefcase size={32} className="text-gray-400" />
                       </div>
                       <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-1">No jobs found</h3>
-                      <p className="text-[#637381] dark:text-gray-400 text-sm max-w-sm">
+                      <p className="text-black dark:text-gray-400 text-sm max-w-sm">
                         We couldn't find any jobs matching your current search and filter criteria.
                       </p>
                       <button className="mt-4 text-[#1890FF] font-bold text-sm hover:underline" onClick={() => {setSearchQuery(''); setStatusFilter('All');}}>
@@ -353,11 +390,11 @@ export default function JobsPage() {
         
         {filteredJobs.length > 0 && (
           <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800/50 flex items-center justify-between bg-gray-50/30 dark:bg-gray-800/10">
-            <span className="text-sm text-[#637381] dark:text-gray-400 font-medium">
+            <span className="text-sm text-black dark:text-gray-400 font-medium">
               Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredJobs.length)} of {filteredJobs.length} jobs
             </span>
             <div className="flex gap-1 items-center">
-              <span className="text-sm text-[#637381] dark:text-gray-400 font-medium mr-2">
+              <span className="text-sm text-black dark:text-gray-400 font-medium mr-2">
                 Page {currentPage} of {totalPages}
               </span>
               <button 
@@ -399,7 +436,7 @@ export default function JobsPage() {
             </div>
             
             <div className="p-6 overflow-visible space-y-4">
-              <p className="text-sm text-[#637381] dark:text-gray-400">
+              <p className="text-sm text-black dark:text-gray-400">
                 You are sending <span className="font-bold text-[#212b36] dark:text-white">{selectedJobForAgency?.title}</span> to an agency partner.
               </p>
               
@@ -430,10 +467,19 @@ export default function JobsPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 dark:border-gray-800/50 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/10 rounded-b-2xl">
+            </div>
+              <div className="p-6 border-t border-gray-100 dark:border-gray-800/50 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/10 rounded-b-2xl">
+                <button 
+                  onClick={() => setModalStep(1)}
+                  className="px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+                >
+                  Back
+                </button>
+                <div className="flex gap-3">
+
               <button 
                 onClick={() => setIsSendAgencyModalOpen(false)}
-                className="px-5 py-2.5 text-sm font-bold text-[#637381] hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+                className="px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -464,7 +510,7 @@ export default function JobsPage() {
               <CheckCircle size={40} />
             </div>
             <h3 className="text-2xl font-bold text-[#212b36] dark:text-white mb-3">{customAlert.title}</h3>
-            <p className="text-[#637381] dark:text-gray-400 mb-8 text-[15px] leading-relaxed">
+            <p className="text-black dark:text-gray-400 mb-8 text-[15px] leading-relaxed">
               {customAlert.message}
             </p>
             <button 
@@ -491,7 +537,105 @@ export default function JobsPage() {
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto space-y-4">
+            
+            {modalStep === 1 ? (
+              <div className="p-8 overflow-y-auto flex flex-col items-center justify-center min-h-[400px]">
+                {isExtracting ? (
+                  <div className="flex flex-col items-center justify-center space-y-6 animate-fade-in">
+                    <div className="relative">
+                      <div className="w-20 h-20 border-4 border-[#1890FF]/20 rounded-full"></div>
+                      <div className="w-20 h-20 border-4 border-[#1890FF] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                      <BrainCircuit className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#1890FF]" size={32} />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-[#212b36] dark:text-white mb-2">Analyzing Job Description</h3>
+                      <p className="text-black text-sm">Our AI is extracting key details to pre-fill your form...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full max-w-md space-y-8 animate-fade-in">
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-[#212b36] dark:text-white mb-2">Let's create a new job</h3>
+                      <p className="text-black text-sm">Provide a job description to automatically populate the details.</p>
+                    </div>
+                    
+                                          <div className="space-y-5">
+                        <div 
+                          onClick={() => document.getElementById('jd-upload').click()}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          className={`relative flex flex-col items-center justify-center py-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${isDragging ? 'border-[#1890FF] bg-[#1890FF]/5' : 'border-gray-200 dark:border-gray-700 hover:border-[#1890FF] hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                        >
+                          <input 
+                            id="jd-upload" 
+                            type="file" 
+                            className="hidden" 
+                            accept=".pdf,.doc,.docx,.txt"
+                            onChange={(e) => handleFileUpload(e.target.files[0])}
+                          />
+                          <div className="w-10 h-10 bg-[#1890FF]/10 text-[#1890FF] rounded-full flex items-center justify-center mb-2">
+                            <UploadCloud size={20} />
+                          </div>
+                          <h4 className="font-bold text-[#212b36] dark:text-white text-sm mb-1">Upload Job Description</h4>
+                          <p className="text-[11px] text-black text-center">Drag & drop or click (PDF, DOCX, TXT)</p>
+                        </div>
+                        
+                        <div className="relative flex items-center">
+                          <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+                          <span className="flex-shrink-0 mx-4 text-xs font-bold text-[#212b36] dark:text-gray-300">OR PASTE TEXT</span>
+                          <div className="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <textarea 
+                            value={newJobData.jdText}
+                            onChange={(e) => setNewJobData({...newJobData, jdText: e.target.value})}
+                            className="w-full h-32 px-4 py-3 bg-gray-50 dark:bg-[#161c24] border border-gray-200 dark:border-gray-700/50 rounded-xl text-sm focus:outline-none focus:ring-0 focus:border-[#1890FF] transition-colors resize-none text-[#212b36] dark:text-white"
+                            placeholder="Paste your job description text here..."
+                          ></textarea>
+                          <button 
+                            disabled={!newJobData.jdText.trim()}
+                            onClick={() => {
+                            setSkippedJdUpload(false);
+                            simulateExtraction();
+                          }}
+                            className={`w-full flex justify-center items-center gap-2 py-3 text-sm font-bold text-white rounded-xl transition-colors ${newJobData.jdText.trim() ? 'bg-[#1890FF] hover:bg-[#1890FF]/90 cursor-pointer shadow-[0_4px_12px_rgba(24,144,255,0.24)]' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed shadow-none'}`}
+                          >
+                            <BrainCircuit size={16} />
+                            Extract & Continue
+                          </button>
+                        </div>
+                        
+                        <div className="pt-2 text-center">
+                          <button 
+                            onClick={() => {
+                              setSkippedJdUpload(true);
+                              setNewJobData({
+                                title: '',
+                                department: '',
+                                location: '',
+                                type: 'Full-time',
+                                workMode: 'On-site',
+                                hiringManager: '',
+                                jdText: '',
+                                jdFile: null
+                              });
+                              setModalStep(2);
+                            }}
+                            className="text-sm font-bold text-[#212b36] dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                          >
+                            Skip and fill manually <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+
+              <>
+<div className="p-6 overflow-y-auto space-y-4 flex-1">
               <div className="flex flex-col">
                 <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Job Title</label>
                 <input 
@@ -528,23 +672,39 @@ export default function JobsPage() {
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Employment Type</label>
-                  <select 
+                  <SearchableSelect 
+                    options={[
+                      { label: 'Full-time', value: 'Full-time' },
+                      { label: 'Part-time', value: 'Part-time' },
+                      { label: 'Contract', value: 'Contract' },
+                      { label: 'Hybrid', value: 'Hybrid' }
+                    ]}
                     value={newJobData.type}
-                    onChange={(e) => setNewJobData({...newJobData, type: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-lg text-sm focus:outline-none focus:ring-0 focus:border-[#1890FF] transition-colors text-[#212b36] dark:text-white"
-                  >
-                    <option>Full-time</option>
-                    <option>Part-time</option>
-                    <option>Contract</option>
-                    <option>Hybrid</option>
-                  </select>
+                    onChange={(value) => setNewJobData({...newJobData, type: value})}
+                    placeholder="Select employment type..."
+                  />
                   <div className="min-h-[20px] mt-1"></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col">
-                  <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Location</label>
+                  <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Work Mode</label>
+                  <SearchableSelect 
+                    options={[
+                      { label: 'On-site', value: 'On-site' },
+                      { label: 'Hybrid', value: 'Hybrid' },
+                      { label: 'Remote', value: 'Remote' }
+                    ]}
+                    value={newJobData.workMode}
+                    onChange={(value) => setNewJobData({...newJobData, workMode: value})}
+                    placeholder="Select work mode..."
+                  />
+                  <div className="min-h-[20px] mt-1"></div>
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Location (City, Country)</label>
                   <input 
                     type="text" 
                     value={newJobData.location}
@@ -559,78 +719,54 @@ export default function JobsPage() {
                     {errors.location && <p className="text-[#FF5630] text-xs animate-fade-in">{errors.location}</p>}
                   </div>
                 </div>
-
-                <div className="flex flex-col">
-                  <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Hiring Manager</label>
-                  <input 
-                    type="text" 
-                    value={newJobData.hiringManager}
-                    onChange={(e) => {
-                      setNewJobData({...newJobData, hiringManager: e.target.value});
-                      if (errors.hiringManager) setErrors({...errors, hiringManager: null});
-                    }}
-                    className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border rounded-lg text-sm focus:outline-none focus:ring-0 transition-colors ${errors.hiringManager ? 'border-[#FF5630] focus:border-[#FF5630]' : 'border-gray-200 dark:border-gray-700/50 focus:border-[#1890FF]'} text-[#212b36] dark:text-white`}
-                    placeholder="e.g. Jane Doe"
-                  />
-                  <div className="min-h-[20px] mt-1 flex items-start">
-                    {errors.hiringManager && <p className="text-[#FF5630] text-xs animate-fade-in">{errors.hiringManager}</p>}
-                  </div>
-                </div>
               </div>
 
-              <div className="flex flex-col">
-                <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5 flex justify-between items-center">
-                  <span>Job Description</span>
-                  <label className="text-xs font-bold text-[#1890FF] cursor-pointer hover:underline flex items-center gap-1">
-                    <UploadCloud size={14} /> Upload Document (PDF, DOC, TXT)
+              {skippedJdUpload && (
+                <div className="flex flex-col mt-4">
+                  <label className="block text-sm font-bold text-[#212b36] dark:text-white mb-1.5">Job Description File (Optional)</label>
+                  <div 
+                    onClick={() => document.getElementById('jd-upload-manual').click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative flex flex-col items-center justify-center py-4 border-2 border-dashed rounded-lg cursor-pointer transition-all ${isDragging ? 'border-[#1890FF] bg-[#1890FF]/5' : 'border-gray-200 dark:border-gray-700 hover:border-[#1890FF] hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                  >
                     <input 
+                      id="jd-upload-manual" 
                       type="file" 
-                      accept=".pdf,.doc,.docx,.txt" 
                       className="hidden" 
+                      accept=".pdf,.doc,.docx,.txt"
                       onChange={(e) => {
-                        setNewJobData({...newJobData, jdFile: e.target.files[0]});
-                        if (errors.jd) setErrors({...errors, jd: null});
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload(e.target.files[0]);
+                        }
                       }}
                     />
-                  </label>
-                </label>
-                {newJobData.jdFile ? (
-                  <div className="flex items-center justify-between p-3 bg-[#1890FF]/10 rounded-lg border border-[#1890FF]/20">
-                    <div className="flex items-center gap-2 text-sm font-bold text-[#1890FF]">
-                      <UploadCloud size={16} />
-                      {newJobData.jdFile.name}
+                    <div className="flex flex-col items-center gap-1">
+                      <UploadCloud size={20} className="text-[#1890FF] mb-1" />
+                      <span className="text-sm font-medium text-[#212b36] dark:text-white">
+                        {newJobData.jdFile ? newJobData.jdFile.name : 'Upload Document (PDF, DOC, TXT)'}
+                      </span>
+                      {!newJobData.jdFile && (
+                        <span className="text-xs text-black">Drag & drop or click to upload</span>
+                      )}
                     </div>
-                    <button 
-                      onClick={() => {
-                        setNewJobData({...newJobData, jdFile: null});
-                      }}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <X size={16} />
-                    </button>
                   </div>
-                ) : (
-                  <textarea 
-                    value={newJobData.jdText}
-                    onChange={(e) => {
-                      setNewJobData({...newJobData, jdText: e.target.value});
-                      if (errors.jd) setErrors({...errors, jd: null});
-                    }}
-                    rows="4"
-                    className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border rounded-lg text-sm focus:outline-none focus:ring-0 transition-colors resize-y ${errors.jd ? 'border-[#FF5630] focus:border-[#FF5630]' : 'border-gray-200 dark:border-gray-700/50 focus:border-[#1890FF]'} text-[#212b36] dark:text-white`}
-                    placeholder="Paste job description here or click upload document above..."
-                  ></textarea>
-                )}
-                <div className="min-h-[20px] mt-1 flex items-start">
-                  {errors.jd && <p className="text-[#FF5630] text-xs animate-fade-in">{errors.jd}</p>}
                 </div>
-              </div>
+              )}
             </div>
 
-            <div className="p-6 border-t border-gray-100 dark:border-gray-800/50 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/10 rounded-b-2xl">
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800/50 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/10 rounded-b-2xl">
+                <button 
+                  onClick={() => setModalStep(1)}
+                  className="px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+                >
+                  Back
+                </button>
+                <div className="flex gap-3">
               <button 
                 onClick={handleCloseModal}
-                className="px-5 py-2.5 text-sm font-bold text-[#637381] hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+                className="px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -652,6 +788,7 @@ export default function JobsPage() {
                       };
                       setJobs([...jobs, newJob]);
                       setSuccessMessage(`Job "${newJobData.title}" created successfully!`);
+                      navigate('/dashboard/job-setup/overview', { state: { jobData: newJob, from: { name: 'Job List', path: '/dashboard/jobs' } } });
                     }
                     setTimeout(() => setSuccessMessage(null), 4000);
                     handleCloseModal();
@@ -659,9 +796,13 @@ export default function JobsPage() {
                 }}
                 className="px-5 py-2.5 text-sm font-bold text-white bg-[#1890FF] hover:bg-[#1890FF]/90 rounded-lg shadow-sm transition-colors cursor-pointer"
               >
-                {editingJobId ? 'Update Job' : 'Save Job'}
+                {editingJobId ? 'Update Job' : 'Create & Continue Setup'}
               </button>
             </div>
+              </div>
+              </>
+            )}
+    
           </div>
         </div>
       )}
@@ -674,7 +815,7 @@ export default function JobsPage() {
           </div>
           <div className="pr-2">
             <h4 className="text-sm font-bold text-[#212b36] dark:text-white">Success</h4>
-            <p className="text-xs font-medium text-[#637381] dark:text-gray-400 mt-0.5">{successMessage}</p>
+            <p className="text-xs font-medium text-black dark:text-gray-400 mt-0.5">{successMessage}</p>
           </div>
           <button onClick={() => setSuccessMessage(null)} className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <X size={16} />

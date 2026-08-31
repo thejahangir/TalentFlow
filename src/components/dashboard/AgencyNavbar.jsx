@@ -48,7 +48,7 @@ export default function AgencyNavbar({ isSidebarCollapsed, toggleSidebar }) {
                   key={link.name} 
                   to={link.path}
                   className={`relative flex items-center h-full px-3 text-sm font-medium transition-colors group cursor-pointer ${
-                    isActive ? 'text-[#1890FF]' : 'text-[#637381] dark:text-white hover:text-[#1890FF] dark:hover:text-[#1890FF]'
+                    isActive ? 'text-[#1890FF]' : 'text-black dark:text-white hover:text-[#1890FF] dark:hover:text-[#1890FF]'
                   }`}
                 >
                   {link.name}

@@ -53,7 +53,7 @@ export default function LoginForm({ setView }) {
     <div className="w-full animate-fade-in">
       <div className="mb-8">
         <h4 className="text-[1.5rem] font-bold text-[#212b36] mb-3">Sign in to TalentFlow</h4>
-        <p className="text-[0.875rem] text-[#637381]">
+        <p className="text-[0.875rem] text-black">
           New user?{' '}
           <button onClick={() => setView('signup')} className="text-[#00A76F] font-semibold hover:underline transition-all">
             Create an account
@@ -77,7 +77,7 @@ export default function LoginForm({ setView }) {
             />
             <label 
               htmlFor="email"
-              className={`absolute text-sm duration-200 transform -translate-y-1/2 scale-[0.80] top-0 z-10 origin-[0] bg-white px-1.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-focus:scale-[0.80] peer-focus:-translate-y-1/2 left-2.5 pointer-events-none ${errors.email ? 'text-[#FF5630] peer-focus:text-[#FF5630]' : 'text-[#637381] peer-focus:text-[#212b36]'}`}
+              className={`absolute text-sm duration-200 transform -translate-y-1/2 scale-[0.80] top-0 z-10 origin-[0] bg-white px-1.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-focus:scale-[0.80] peer-focus:-translate-y-1/2 left-2.5 pointer-events-none ${errors.email ? 'text-[#FF5630] peer-focus:text-[#FF5630]' : 'text-black peer-focus:text-[#212b36]'}`}
             >
               Email address
             </label>
@@ -102,7 +102,7 @@ export default function LoginForm({ setView }) {
             />
             <label 
               htmlFor="password"
-              className={`absolute text-sm duration-200 transform -translate-y-1/2 scale-[0.80] top-0 z-10 origin-[0] bg-white px-1.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-focus:scale-[0.80] peer-focus:-translate-y-1/2 left-2.5 pointer-events-none ${errors.password ? 'text-[#FF5630] peer-focus:text-[#FF5630]' : 'text-[#637381] peer-focus:text-[#212b36]'}`}
+              className={`absolute text-sm duration-200 transform -translate-y-1/2 scale-[0.80] top-0 z-10 origin-[0] bg-white px-1.5 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-focus:scale-[0.80] peer-focus:-translate-y-1/2 left-2.5 pointer-events-none ${errors.password ? 'text-[#FF5630] peer-focus:text-[#FF5630]' : 'text-black peer-focus:text-[#212b36]'}`}
             >
               Password
             </label>
@@ -141,7 +141,7 @@ export default function LoginForm({ setView }) {
             <div className="w-full border-t border-gray-200"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-[#637381] text-xs font-semibold uppercase tracking-wider">Quick Login Demo</span>
+            <span className="px-2 bg-white text-black text-xs font-semibold uppercase tracking-wider">Quick Login Demo</span>
           </div>
         </div>
 
