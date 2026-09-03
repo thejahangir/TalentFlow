@@ -1,301 +1,321 @@
-import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bold, Italic, Underline, List, ListOrdered, Link, AlignLeft, AlignCenter, AlignRight, MessageSquare, Send, AtSign, X, Check, FileText, ThumbsDown, AlertCircle, CheckCircle2, Award } from 'lucide-react';
+import { 
+  Plus, X, ChevronDown, Check, LayoutTemplate, 
+  Trash2, GripVertical, FileCheck, Users, Target
+} from 'lucide-react';
 import JobSetupHeader from '../components/dashboard/JobSetupHeader';
 
-// Mock Rating Component
-const RatingControl = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800/50 last:border-0">
-    <span className="text-sm font-medium text-[#212b36] dark:text-gray-300">{label}</span>
-    <div className="flex gap-2">
-      {[1, 2, 3, 4, 5].map((num) => (
-        <button
-          key={num}
-          onClick={() => onChange(num)}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-            value === num 
-              ? 'bg-[#1890FF] text-white shadow-md transform scale-110' 
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
-          {num}
-        </button>
-      ))}
-    </div>
-  </div>
-);
+const SUGGESTED_ATTRIBUTES = {
+  'Personality Traits': [
+    'Self-motivated',
+    'Team player',
+    'Disciplined',
+    'Communication Skills',
+    'Adaptability',
+    'Problem Solver',
+    'Leadership',
+    'Detail-oriented'
+  ],
+  'Qualifications': [
+    '5+ years relevant experience',
+    'B.S. in Computer Science',
+    'Strong analytical skills',
+    'Experience with Agile/Scrum',
+    'Proficient in React & Node.js',
+    'Cloud Architecture experience'
+  ]
+};
 
 export default function JobSetupScorecardsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const jobData = location.state?.jobData;
 
-  const [ratings, setRatings] = useState({});
-  const [recommendation, setRecommendation] = useState(null);
-  
-  // Note Modals state
-  const [activeNoteModal, setActiveNoteModal] = useState(null); // 'private' | 'other' | null
-  const [notes, setNotes] = useState({ private: '', other: '' });
-  const [tempNoteText, setTempNoteText] = useState('');
-
-  // Chat State
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, user: 'Amit (Manager)', text: 'I added the standard qualifications. Does anyone want to add specific coding test scores here?', time: '10:00 AM', color: 'bg-[#00A76F]/20 text-[#00A76F]' },
-    { id: 2, user: 'Priya (Recruiter)', text: '@Amit we usually put coding scores in a separate stage, this looks good for the main interview.', time: '10:15 AM', color: 'bg-[#1890FF]/20 text-[#1890FF]' },
+  // State for Categories and their Attributes
+  const [categories, setCategories] = useState([
+    {
+      id: 1,
+      name: 'Personality Traits',
+      attributes: ['Self-motivated', 'Team player', 'Disciplined']
+    },
+    {
+      id: 2,
+      name: 'Qualifications',
+      attributes: ['5+ years relevant experience', 'Strong analytical skills']
+    }
   ]);
-  const [chatInput, setChatInput] = useState('');
-  const [showTagMenu, setShowTagMenu] = useState(false);
 
-  const personalTraits = [
-    'Self motivated',
-    'Team player',
-    'Disciplined',
-    'Attention to details',
-    'Communications skills',
-    'Job Stability'
-  ];
+  // State for Interview Rounds (Focus Attributes)
+  const [rounds, setRounds] = useState([
+    {
+      id: 1,
+      name: 'HR Phone Screen',
+      focusAttributes: ['Self-motivated', 'Communication Skills']
+    },
+    {
+      id: 2,
+      name: 'Technical Interview',
+      focusAttributes: ['5+ years relevant experience', 'Strong analytical skills']
+    },
+    {
+      id: 3,
+      name: 'Culture Fit',
+      focusAttributes: ['Team player', 'Disciplined']
+    }
+  ]);
 
-  const qualifications = [
-    'Five years relevant experience',
-    'Strong communication skill'
-  ];
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newRoundName, setNewRoundName] = useState('');
 
-  const recommendationOptions = [
-    { label: 'Definitely Not', value: 'definitely_not', icon: ThumbsDown, color: 'text-[#FF5630]', bgActive: 'bg-[#FF5630]/10', borderActive: 'border-[#FF5630]', shadow: 'shadow-[0_4px_12px_rgba(255,86,48,0.24)]' },
-    { label: 'No', value: 'no', icon: AlertCircle, color: 'text-[#FFC107]', bgActive: 'bg-[#FFC107]/10', borderActive: 'border-[#FFC107]', shadow: 'shadow-[0_4px_12px_rgba(255,193,7,0.24)]' },
-    { label: 'Yes', value: 'yes', icon: CheckCircle2, color: 'text-[#00A76F]', bgActive: 'bg-[#00A76F]/10', borderActive: 'border-[#00A76F]', shadow: 'shadow-[0_4px_12px_rgba(0,167,111,0.24)]' },
-    { label: 'Strong Yes', value: 'strong_yes', icon: Award, color: 'text-[#1890FF]', bgActive: 'bg-[#1890FF]/10', borderActive: 'border-[#1890FF]', shadow: 'shadow-[0_4px_12px_rgba(24,144,255,0.24)]' }
-  ];
+  // Helper to get all currently defined attributes across all categories
+  const allDefinedAttributes = categories.flatMap(cat => cat.attributes);
 
-  const handleRatingChange = (category, item, value) => {
-    setRatings(prev => ({
-      ...prev,
-      [`${category}_${item}`]: value
+  // --- Category Handlers ---
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    setCategories([
+      ...categories,
+      { id: Date.now(), name: newCategoryName.trim(), attributes: [] }
+    ]);
+    setNewCategoryName('');
+  };
+
+  const handleRemoveCategory = (catId) => {
+    setCategories(categories.filter(c => c.id !== catId));
+  };
+
+  const handleAddAttribute = (catId, attribute) => {
+    if (!attribute.trim()) return;
+    setCategories(categories.map(cat => {
+      if (cat.id === catId) {
+        if (cat.attributes.includes(attribute.trim())) return cat; // Prevent duplicates
+        return { ...cat, attributes: [...cat.attributes, attribute.trim()] };
+      }
+      return cat;
     }));
   };
 
-  const openNoteModal = (type) => {
-    setTempNoteText(notes[type]);
-    setActiveNoteModal(type);
+  const handleRemoveAttribute = (catId, attributeToRemove) => {
+    setCategories(categories.map(cat => {
+      if (cat.id === catId) {
+        return { ...cat, attributes: cat.attributes.filter(attr => attr !== attributeToRemove) };
+      }
+      return cat;
+    }));
   };
 
-  const saveNote = () => {
-    setNotes(prev => ({ ...prev, [activeNoteModal]: tempNoteText }));
-    setActiveNoteModal(null);
+  // --- Round Handlers ---
+  const handleAddRound = () => {
+    if (!newRoundName.trim()) return;
+    setRounds([
+      ...rounds,
+      { id: Date.now(), name: newRoundName.trim(), focusAttributes: [] }
+    ]);
+    setNewRoundName('');
   };
 
-  const sendChatMessage = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-    
-    const newMsg = {
-      id: Date.now(),
-      user: 'You',
-      text: chatInput,
-      time: 'Just now',
-      color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400'
-    };
-    
-    setChatMessages([...chatMessages, newMsg]);
-    setChatInput('');
-    setShowTagMenu(false);
+  const handleRemoveRound = (roundId) => {
+    setRounds(rounds.filter(r => r.id !== roundId));
   };
 
-  const handleChatInputChange = (e) => {
-    setChatInput(e.target.value);
-    if (e.target.value.endsWith('@')) {
-      setShowTagMenu(true);
-    } else if (showTagMenu && !e.target.value.includes('@')) {
-      setShowTagMenu(false);
-    }
-  };
-
-  const selectTag = (name) => {
-    setChatInput(prev => prev.slice(0, -1) + `@${name} `);
-    setShowTagMenu(false);
+  const handleToggleFocusAttribute = (roundId, attribute) => {
+    setRounds(rounds.map(round => {
+      if (round.id === roundId) {
+        const hasAttr = round.focusAttributes.includes(attribute);
+        const newAttrs = hasAttr 
+          ? round.focusAttributes.filter(a => a !== attribute)
+          : [...round.focusAttributes, attribute];
+        return { ...round, focusAttributes: newAttrs };
+      }
+      return round;
+    }));
   };
 
   return (
     <div className="p-6 flex flex-col min-h-[calc(100vh-100px)] animate-fade-in font-sans">
-      <div className="relative z-10 w-full mb-6">
+      <div className="relative z-10 w-full mb-8">
         <JobSetupHeader 
-          title="Scorecards" 
-          subtitle="Define how interviewers will evaluate candidates for this role." 
+          title="Scorecard" 
+          subtitle="Define evaluation categories, attributes, and map them to specific interview rounds." 
         />
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex-1 w-full space-y-12">
         
-        {/* LEFT PANE: Scorecard Evaluation Form (2/3 width) */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Key Take-aways & Notes */}
-          <div className="bg-white dark:bg-[#161c24] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800/50">
-            <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-4">Key Take-aways</h3>
-            
-            {/* Mock Rich Text Editor */}
-            <div className="border border-gray-200 dark:border-gray-700/50 rounded-xl overflow-hidden focus-within:border-[#1890FF] focus-within:ring-1 focus-within:ring-[#1890FF]/20 transition-all">
-              <div className="bg-gray-50/80 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 p-2 flex items-center gap-1 flex-wrap">
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><Bold size={16} /></button>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><Italic size={16} /></button>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><Underline size={16} /></button>
-                <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><List size={16} /></button>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><ListOrdered size={16} /></button>
-                <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><AlignLeft size={16} /></button>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><AlignCenter size={16} /></button>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><AlignRight size={16} /></button>
-                <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                <button className="p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"><Link size={16} /></button>
-              </div>
-              <textarea 
-                className="w-full h-32 p-4 bg-transparent resize-y outline-none text-sm text-[#212b36] dark:text-white"
-                placeholder="Enter overall thoughts and key take-aways..."
-              ></textarea>
+        {/* Section 1: Categories & Attributes */}
+        <section>
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-[#1890FF]/10 text-[#1890FF] flex items-center justify-center">
+              <LayoutTemplate size={18} />
             </div>
-
-            {/* Note Links */}
-            <div className="mt-4 flex gap-4">
-              <button 
-                onClick={() => openNoteModal('private')}
-                className="text-sm font-bold text-[#1890FF] hover:underline flex items-center gap-1.5 cursor-pointer"
-              >
-                <FileText size={16} /> Private Note {notes.private && <span className="w-2 h-2 rounded-full bg-[#FF5630]"></span>}
-              </button>
-              <button 
-                onClick={() => openNoteModal('other')}
-                className="text-sm font-bold text-[#1890FF] hover:underline flex items-center gap-1.5 cursor-pointer"
-              >
-                <MessageSquare size={16} /> Note for other interviewers {notes.other && <span className="w-2 h-2 rounded-full bg-[#00A76F]"></span>}
-              </button>
+            <div>
+              <h2 className="text-xl font-bold text-[#212b36] dark:text-white">Categories & Attributes</h2>
+              <p className="text-sm text-gray-500">Define the traits and qualifications to evaluate candidates on.</p>
             </div>
           </div>
 
-          {/* Ratings */}
-          <div className="bg-white dark:bg-[#161c24] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800/50">
-            <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-6 border-b border-gray-100 dark:border-gray-800/50 pb-3">Personal Traits</h3>
-            <div className="space-y-1">
-              {personalTraits.map(trait => (
-                <RatingControl 
-                  key={trait} 
-                  label={trait} 
-                  value={ratings[`traits_${trait}`]} 
-                  onChange={(val) => handleRatingChange('traits', trait, val)} 
-                />
-              ))}
-            </div>
-
-            <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-6 mt-8 border-b border-gray-100 dark:border-gray-800/50 pb-3">Qualifications</h3>
-            <div className="space-y-1">
-              {qualifications.map(qual => (
-                <RatingControl 
-                  key={qual} 
-                  label={qual} 
-                  value={ratings[`quals_${qual}`]} 
-                  onChange={(val) => handleRatingChange('quals', qual, val)} 
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Overall Recommendations */}
-          <div className="bg-white dark:bg-[#161c24] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800/50">
-            <h3 className="text-lg font-bold text-[#212b36] dark:text-white mb-4">Overall Recommendation</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {recommendationOptions.map(opt => {
-                const Icon = opt.icon;
-                const isActive = recommendation === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => setRecommendation(opt.value)}
-                    className={`relative py-2.5 px-3 rounded-xl border-2 transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden group cursor-pointer ${
-                      isActive 
-                        ? `${opt.borderActive} ${opt.bgActive} ${opt.shadow} scale-[1.02]` 
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161c24] hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    <Icon size={16} className={`${isActive ? opt.color : 'text-gray-400 dark:text-gray-500'}`} />
-                    <span className={`text-[13px] font-bold ${
-                      isActive ? opt.color : 'text-[#212b36] dark:text-white group-hover:text-gray-600 dark:group-hover:text-gray-300'
-                    }`}>
-                      {opt.label}
-                    </span>
-                    
-                    {/* Selection Indicator */}
-                    {isActive && (
-                      <div className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${opt.color.replace('text-', 'bg-')}`} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT PANE: Chat Box (1/3 width) */}
-        <div className="lg:col-span-1 flex flex-col h-[600px] lg:h-auto lg:sticky lg:top-24 bg-gray-50/50 dark:bg-[#212b36]/30 rounded-2xl border border-gray-100 dark:border-gray-800/50 overflow-hidden shadow-sm">
-          <div className="bg-white dark:bg-[#161c24] p-4 border-b border-gray-100 dark:border-gray-800/50 flex items-center justify-between z-10">
-            <h3 className="font-bold text-[#212b36] dark:text-white flex items-center gap-2">
-              <MessageSquare size={18} className="text-[#1890FF]" /> Team Chat
-            </h3>
-            <span className="text-xs font-bold bg-[#1890FF]/10 text-[#1890FF] px-2 py-1 rounded-md">2 Online</span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatMessages.map(msg => (
-              <div key={msg.id} className="animate-fade-in">
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-xs font-bold text-[#212b36] dark:text-white">{msg.user}</span>
-                  <span className="text-[10px] font-medium text-gray-400">{msg.time}</span>
-                </div>
-                <div className="bg-white dark:bg-[#161c24] border border-gray-100 dark:border-gray-700/50 p-3 rounded-2xl rounded-tl-none shadow-[0_2px_10px_rgb(0,0,0,0.02)] text-sm text-[#454f5b] dark:text-gray-300 leading-relaxed">
-                  {/* Highlight mentions */}
-                  {msg.text.split(' ').map((word, i) => 
-                    word.startsWith('@') ? <span key={i} className="font-bold text-[#1890FF] bg-[#1890FF]/10 px-1 rounded mx-0.5">{word} </span> : word + ' '
-                  )}
-                </div>
-              </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {categories.map((category) => (
+              <CategoryCard 
+                key={category.id} 
+                category={category} 
+                onRemove={() => handleRemoveCategory(category.id)}
+                onAddAttribute={(attr) => handleAddAttribute(category.id, attr)}
+                onRemoveAttribute={(attr) => handleRemoveAttribute(category.id, attr)}
+              />
             ))}
+
+            {/* Add New Category */}
+            <div className="bg-gray-50 dark:bg-[#161c24]/50 border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 flex items-center gap-4 transition-colors focus-within:border-[#1890FF] focus-within:bg-white dark:focus-within:bg-[#161c24]">
+              <input 
+                type="text" 
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                placeholder="Enter a new category name (e.g. Technical Skills)" 
+                className="flex-1 bg-transparent outline-none text-[#212b36] dark:text-white font-medium"
+              />
+              <button 
+                onClick={handleAddCategory}
+                disabled={!newCategoryName.trim()}
+                className="px-4 py-2 bg-[#212b36] dark:bg-white text-white dark:text-[#212b36] rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              >
+                <Plus size={16} /> Add Category
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-gray-200 dark:border-gray-800" />
+
+        {/* Section 2: Interview Plan (Focus Attributes Matrix) */}
+        <section>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#00A76F]/10 text-[#00A76F] flex items-center justify-center">
+                <Target size={18} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#212b36] dark:text-white">Focus Attributes per Interview</h2>
+                <p className="text-sm text-gray-500">Ensure every critical attribute is evaluated across your interview rounds.</p>
+              </div>
+            </div>
+            
+
           </div>
 
-          <div className="p-4 bg-white dark:bg-[#161c24] border-t border-gray-100 dark:border-gray-800/50 relative">
-            {showTagMenu && (
-              <div className="absolute bottom-full mb-2 left-4 w-48 bg-white dark:bg-[#212b36] rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-20">
-                <div className="p-2 text-xs font-bold text-gray-400 border-b border-gray-100 dark:border-gray-700/50">Tag a team member</div>
-                <button onClick={() => selectTag('Amit')} className="w-full text-left px-3 py-2 text-sm text-[#212b36] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 font-medium">Amit (Manager)</button>
-                <button onClick={() => selectTag('Priya')} className="w-full text-left px-3 py-2 text-sm text-[#212b36] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 font-medium">Priya (Recruiter)</button>
-              </div>
-            )}
-            <form onSubmit={sendChatMessage} className="flex items-end gap-2">
-              <div className="flex-1 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl flex items-center px-2 focus-within:border-[#1890FF] focus-within:ring-1 focus-within:ring-[#1890FF]/20 transition-all">
-                <button type="button" onClick={() => setShowTagMenu(!showTagMenu)} className="p-1.5 text-gray-400 hover:text-[#1890FF] transition-colors" title="Tag someone">
-                  <AtSign size={16} />
-                </button>
-                <input 
-                  type="text" 
-                  value={chatInput}
-                  onChange={handleChatInputChange}
-                  className="flex-1 bg-transparent border-none py-2.5 px-2 text-sm focus:outline-none text-[#212b36] dark:text-white"
-                  placeholder="Type a message..."
-                />
-              </div>
-              <button 
-                type="submit"
-                disabled={!chatInput.trim()}
-                className="w-11 h-11 bg-[#1890FF] text-white rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1890FF]/90 transition-colors shrink-0 shadow-sm"
-              >
-                <Send size={18} />
-              </button>
-            </form>
+          <div className="bg-white dark:bg-[#161c24] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm overflow-x-auto custom-scrollbar relative">
+            <table className="w-full text-left border-collapse min-w-[900px]">
+              <thead>
+                <tr>
+                  <th className="bg-gray-50 dark:bg-[#1a222c] border-b border-gray-200 dark:border-gray-700 p-5 font-bold text-[#212b36] dark:text-gray-300 w-80 min-w-[300px] sticky left-0 z-20 shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#374151]">
+                    <span className="text-sm text-gray-500 font-semibold">Evaluation Criteria</span>
+                  </th>
+                  {rounds.map((round, idx) => (
+                    <th key={round.id} className="bg-gray-50 dark:bg-[#1a222c] border-b border-l border-gray-200 dark:border-gray-700 p-5 min-w-[200px] align-top relative group">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-gray-400">Round {idx + 1}</span>
+                          <button onClick={() => handleRemoveRound(round.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100 bg-white dark:bg-gray-800 rounded shadow-sm">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-md bg-[#00A76F]/10 text-[#00A76F] flex items-center justify-center shrink-0">
+                            <Users size={14} />
+                          </div>
+                          <span className="font-bold text-[#212b36] dark:text-white leading-tight">{round.name}</span>
+                        </div>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map(category => (
+                  <React.Fragment key={category.id}>
+                    {/* Category Header Row */}
+                    <tr>
+                      <td 
+                        colSpan={rounds.length + 1} 
+                        className="bg-gray-100/50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 p-3 sticky left-0 z-10 shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#374151]"
+                      >
+                        <div className="flex items-center gap-2 font-bold text-[#212b36] dark:text-white text-sm">
+                          <ChevronDown size={16} className="text-gray-400" />
+                          {category.name}
+                          <span className="ml-2 px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-[10px] text-gray-600 dark:text-gray-300">
+                            {category.attributes.length} items
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Attribute Rows */}
+                    {category.attributes.map(attr => {
+                      const roundsCovering = rounds.filter(r => r.focusAttributes.includes(attr)).length;
+                      const isUncovered = roundsCovering === 0;
+
+                      return (
+                        <tr key={attr} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
+                          <td className="bg-white group-hover:bg-transparent dark:bg-[#161c24] border-b border-gray-100 dark:border-gray-800 p-4 sticky left-0 z-10 shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#374151] transition-colors">
+                            <div className="flex items-center justify-between gap-4 pl-4 border-l-2 border-transparent group-hover:border-[#1890FF]">
+                              <span className="text-sm font-medium text-[#454f5b] dark:text-gray-300">{attr}</span>
+                              
+                              {/* HR Insight: Coverage Indicator */}
+                              {isUncovered ? (
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50 whitespace-nowrap" title="Warning: This attribute is not being evaluated in any round!">
+                                  Unassigned
+                                </span>
+                              ) : (
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[#00A76F]/10 text-[#00A76F] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                  {roundsCovering} {roundsCovering === 1 ? 'Round' : 'Rounds'}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          {rounds.map(round => {
+                            const isChecked = round.focusAttributes.includes(attr);
+                            return (
+                              <td key={round.id} className="border-b border-l border-gray-100 dark:border-gray-800 p-0 text-center relative hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                {/* Fully Clickable Cell */}
+                                <div 
+                                  onClick={() => handleToggleFocusAttribute(round.id, attr)}
+                                  className="absolute inset-0 flex items-center justify-center cursor-pointer w-full h-full"
+                                >
+                                  {/* Custom Styled Checkbox */}
+                                  <div className={`w-4 h-4 rounded-[4px] flex items-center justify-center transition-all duration-200 ${
+                                    isChecked 
+                                      ? 'bg-[#1890FF] border-2 border-[#1890FF] shadow-sm shadow-[#1890FF]/30' 
+                                      : 'bg-white dark:bg-[#161c24] border-2 border-gray-300 dark:border-gray-600 group-hover:border-[#1890FF]/50'
+                                  }`}>
+                                    {isChecked && <Check size={10} className="text-white" strokeWidth={3} />}
+                                  </div>
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+                
+                {allDefinedAttributes.length === 0 && (
+                  <tr>
+                    <td colSpan={rounds.length + 1} className="p-8 text-center text-gray-500">
+                      Add categories and attributes above to build your interview matrix.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </section>
+
       </div>
 
-      <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-800/50 mt-12">
+      {/* Footer Navigation */}
+      <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-800/50 mt-12 sticky bottom-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md z-20 pb-4">
         <button 
           onClick={() => navigate('/dashboard/job-setup/applications', { state: { jobData } })}
           className="px-6 py-2.5 text-sm font-bold text-black bg-white dark:bg-[#161c24] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
@@ -317,52 +337,218 @@ export default function JobSetupScorecardsPage() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Note Modal */}
-      {activeNoteModal && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#161c24] rounded-2xl w-full max-w-lg flex flex-col shadow-2xl animate-scale-up overflow-hidden">
-            <div className="p-5 border-b border-gray-100 dark:border-gray-800/50 flex justify-between items-center bg-gray-50/50 dark:bg-[#161c24]">
-              <h3 className="text-lg font-bold text-[#212b36] dark:text-white flex items-center gap-2">
-                {activeNoteModal === 'private' ? <FileText size={18} className="text-[#1890FF]" /> : <MessageSquare size={18} className="text-[#00A76F]" />}
-                {activeNoteModal === 'private' ? 'Private Note' : 'Note for other interviewers'}
-              </h3>
-              <button onClick={() => setActiveNoteModal(null)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <p className="text-sm text-gray-500 mb-4">
-                {activeNoteModal === 'private' 
-                  ? 'This note will only be visible to you and will not be shared with the hiring team.' 
-                  : 'This note will be pinned to the scorecard for all other interviewers to see.'}
-              </p>
-              <textarea 
-                value={tempNoteText}
-                onChange={(e) => setTempNoteText(e.target.value)}
-                className="w-full h-40 p-4 bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700/50 rounded-xl outline-none text-sm focus:border-[#1890FF] focus:ring-1 focus:ring-[#1890FF]/20 resize-y text-[#212b36] dark:text-white placeholder-gray-400 transition-all"
-                placeholder="Type your notes here..."
-                autoFocus
-              ></textarea>
-            </div>
-            <div className="p-4 border-t border-gray-100 dark:border-gray-800/50 flex justify-end gap-3 bg-gray-50/50 dark:bg-[#161c24]">
+// --- Subcomponents ---
+
+function CategoryCard({ category, onRemove, onAddAttribute, onRemoveAttribute }) {
+  const [inputValue, setInputValue] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const suggestions = SUGGESTED_ATTRIBUTES[category.name] || [];
+  const filteredSuggestions = suggestions.filter(s => 
+    !category.attributes.includes(s) && 
+    s.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleAdd = (val) => {
+    onAddAttribute(val);
+    setInputValue('');
+    setIsDropdownOpen(false);
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#161c24] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm relative group">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <GripVertical size={20} className="text-gray-300 cursor-grab" />
+          <h3 className="text-lg font-bold text-[#212b36] dark:text-white">{category.name}</h3>
+          <span className="bg-gray-100 dark:bg-gray-800 text-gray-500 text-xs px-2 py-0.5 rounded-full font-bold">
+            {category.attributes.length}
+          </span>
+        </div>
+        <button 
+          onClick={onRemove}
+          className="text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+          title="Delete Category"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+
+      <div className="pl-8">
+        <div className="flex flex-wrap gap-2 mb-4">
+          {category.attributes.map(attr => (
+            <div key={attr} className="flex items-center gap-1.5 bg-[#1890FF]/10 text-[#1890FF] border border-[#1890FF]/20 px-3 py-1.5 rounded-lg text-sm font-semibold">
+              {attr}
               <button 
-                onClick={() => setActiveNoteModal(null)}
-                className="px-4 py-2 text-sm font-bold text-[#212b36] dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                onClick={() => onRemoveAttribute(attr)}
+                className="text-[#1890FF]/60 hover:text-[#1890FF] hover:bg-[#1890FF]/20 rounded-full p-0.5 transition-colors"
               >
-                Cancel
-              </button>
-              <button 
-                onClick={saveNote}
-                className="px-6 py-2 text-sm font-bold text-white bg-[#1890FF] hover:bg-[#1890FF]/90 rounded-xl shadow-sm transition-colors flex items-center gap-1.5"
-              >
-                <Check size={16} /> Save Note
+                <X size={14} />
               </button>
             </div>
+          ))}
+          {category.attributes.length === 0 && (
+            <span className="text-sm text-gray-400 italic">No attributes added yet.</span>
+          )}
+        </div>
+
+        {/* Attribute Input & Suggestions */}
+        <div className="relative max-w-md" ref={containerRef}>
+          <div className="relative flex items-center">
+            <input 
+              type="text" 
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setIsDropdownOpen(true);
+              }}
+              onFocus={() => setIsDropdownOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && inputValue.trim()) {
+                  handleAdd(inputValue);
+                }
+              }}
+              placeholder="Type to add a custom attribute..."
+              className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl text-sm outline-none focus:border-[#1890FF] transition-colors text-[#212b36] dark:text-white pr-24"
+            />
+            <button 
+              onClick={() => { if(inputValue.trim()) handleAdd(inputValue); }}
+              className="absolute right-2 text-xs font-bold bg-[#212b36] dark:bg-white text-white dark:text-[#212b36] px-3 py-1 rounded-lg hover:opacity-90 cursor-pointer"
+            >
+              Add
+            </button>
           </div>
-        </div>,
-        document.body
-      )}
+
+          {/* Suggestions Dropdown */}
+          {isDropdownOpen && (filteredSuggestions.length > 0 || inputValue.trim()) && (
+            <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-20">
+              <div className="max-h-48 overflow-y-auto">
+                {filteredSuggestions.map(suggestion => (
+                  <button 
+                    key={suggestion}
+                    onClick={() => handleAdd(suggestion)}
+                    className="w-full text-left px-4 py-2.5 text-sm text-[#212b36] dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group cursor-pointer"
+                  >
+                    {suggestion}
+                    <Plus size={14} className="text-gray-400 group-hover:text-[#1890FF]" />
+                  </button>
+                ))}
+                {inputValue.trim() && !filteredSuggestions.includes(inputValue) && (
+                  <button 
+                    onClick={() => handleAdd(inputValue)}
+                    className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#1890FF] bg-[#1890FF]/5 hover:bg-[#1890FF]/10 transition-colors cursor-pointer border-t border-gray-100 dark:border-gray-700"
+                  >
+                    Add "{inputValue}" as custom attribute
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoundCard({ round, allAttributes, onRemove, onToggleAttribute }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-[#161c24] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm relative group flex flex-col h-full min-h-[200px]">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-base font-bold text-[#212b36] dark:text-white mb-1">{round.name}</h3>
+          <p className="text-xs text-gray-500">{round.focusAttributes.length} Focus Attributes</p>
+        </div>
+        <button 
+          onClick={onRemove}
+          className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+
+      <div className="flex-1">
+        {round.focusAttributes.length > 0 ? (
+          <ul className="space-y-2 mb-6">
+            {round.focusAttributes.map(attr => (
+              <li key={attr} className="flex items-start gap-2 text-sm text-[#212b36] dark:text-gray-300">
+                <Check size={16} className="text-[#00A76F] shrink-0 mt-0.5" />
+                <span className="leading-tight">{attr}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-24 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 mb-6">
+            <span className="text-sm text-gray-400">No focus attributes assigned</span>
+          </div>
+        )}
+      </div>
+
+      <div className="relative mt-auto" ref={containerRef}>
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold text-[#212b36] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+        >
+          Assign Attributes
+          <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-[#212b36] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-30 max-h-60 overflow-y-auto">
+            <div className="p-2 text-xs font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 z-10">
+              Available Attributes
+            </div>
+            {allAttributes.length > 0 ? (
+              allAttributes.map(attr => {
+                const isSelected = round.focusAttributes.includes(attr);
+                return (
+                  <button
+                    key={attr}
+                    onClick={() => onToggleAttribute(attr)}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-between cursor-pointer border-b border-gray-100 dark:border-gray-800/50 last:border-0"
+                  >
+                    <span className={`${isSelected ? 'text-[#00A76F] font-semibold' : 'text-[#212b36] dark:text-gray-300'}`}>
+                      {attr}
+                    </span>
+                    {isSelected && <Check size={16} className="text-[#00A76F]" />}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="p-4 text-center text-sm text-gray-500">
+                Define attributes in the categories above first.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
